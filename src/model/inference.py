@@ -5,6 +5,8 @@ import logging
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 from peft import PeftModel
 from common.config_manager import ConfigManager
+from common.config_manager import ConfigManager
+from common.s3_utils import S3Manager
 
 logger = logging.getLogger("Inference")
 
@@ -141,6 +143,13 @@ class Text2SQLInference:
         self.mode = mode
         self.base_model_id = f"google/flan-t5-{model_size}"
         
+        # Download artifacts from S3 
+        s3 = S3Manager()
+        if s3.enabled:
+            s3.sync_model_from_s3()
+        else:
+            print("S3 disabled in config. Using Local Model.")
+
         # 4. Path Setup using ConfigManager helpers
         # This replaces the manual os.path.join logic
         versioned_model_root = self.config_manager.get_versioned_model_path()
@@ -195,7 +204,7 @@ class Text2SQLInference:
 
         print(input_text)
 
-        inputs = self.tokenizer(input_text, return_tensors="pt", max_length=512, truncation=True).to(self.model.device)
+        inputs = self.tokenizer(input_text, return_tensors="pt", max_length=1024, truncation=True).to(self.model.device)
 
         with torch.no_grad():
             outputs = self.model.generate(
@@ -204,6 +213,19 @@ class Text2SQLInference:
                 num_beams=5,
                 repetition_penalty=1.2
             )
+
+    
+        #with torch.no_grad():
+        #    outputs = self.model.generate(
+        #        **inputs,
+        #        max_new_tokens=256,     # Plenty for a standard SQL query
+        #        num_beams=4,            # Greedy search to test if logic is sound
+        #        repetition_penalty=1.0, # Do not punish repeating table names
+        #        early_stopping=False
+        #    )
+        raw_sql = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+        print(f"RAW OUTPUT: |{raw_sql}|") # Use pipes to see trailing spaces
+        #print(f"Generated SQL :  {self.tokenizer.decode(outputs[0], skip_special_tokens=True)}")
 
         return {
             "question": question,
