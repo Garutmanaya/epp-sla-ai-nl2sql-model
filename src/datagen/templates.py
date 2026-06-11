@@ -48,7 +48,7 @@ SQL_TEMPLATES = [
     # ---------------------------------------------------------
     {
         "id": "metrics_all",
-        "enabled": False,
+        "enabled": True,
         "weight": 100,
         "nl": ["{m_nl} for {filters}"],
         "sql": "SELECT {m_sql} FROM epp_sla",
@@ -68,7 +68,7 @@ SQL_TEMPLATES = [
     # ---------------------------------------------------------
     {
         "id": "group_by",
-        "enabled": False,
+        "enabled": True,
         "weight": 100,
         "nl": ["{m_nl} by {group_col} {filters}"],
         "sql": "SELECT {group_col_sql}, {m_sql} FROM epp_sla",
@@ -91,7 +91,7 @@ SQL_TEMPLATES = [
     # ---------------------------------------------------------
     {
         "id": "metrics_client",
-        "enabled": False,
+        "enabled": True,
         "weight": 100,
         "nl": ["{m_nl} across clients {group_clause} for {filters}"],
         "sql": "SELECT {m_sql} FROM {from_clause}",
@@ -110,28 +110,12 @@ SQL_TEMPLATES = [
             {"filters": ["val", "ts", "group"], "weight": 30}
         ]
     },
-    {
-        "id": "metrics_client",
-        "enabled": False,
-        "weight": 100,
-        "nl": ["{m_nl} across clients for {filters}"],
-        "sql": "SELECT {m_sql} FROM {from_clause}",
-        "tables": ["epp_sla", "epp_client"],
-        "joins": [{"left": "epp_sla.client_name", "right": "epp_client.client_name"}],
-        "apply": ["val", "time", "ts"],
-        "filter_modes": [
-            {"filters": [], "weight": 30},
-            {"filters": ["val"], "weight": 20},
-            {"filters": ["val", "time"], "weight": 30},
-            {"filters": ["val", "ts"], "weight": 20}
-        ]
-    },
     # ---------------------------------------------------------
     # 4. JOIN: SLA + RELEASE (Date Range Join)
     # ---------------------------------------------------------
     {
         "id": "metrics_release",
-        "enabled": False,
+        "enabled": True,
         "weight": 100,
         "nl": ["{m_nl} during releases {group_clause} for {filters}"],
         "sql": "SELECT {m_sql} FROM {from_clause}",
@@ -153,32 +137,12 @@ SQL_TEMPLATES = [
             {"filters": ["val", "ts", "group"], "weight": 40}
         ]
     },
-    {
-        "id": "metrics_release_old",
-        "enabled": False,
-        "weight": 100,
-        "nl": ["{m_nl} during releases for {filters}"],
-        "sql": "SELECT {m_sql} FROM {from_clause}",
-        "tables": ["epp_sla", "epp_release"],
-        "joins": [
-            {
-                "right_table": "epp_release",
-                "on": "epp_sla.date BETWEEN epp_release.release_start AND epp_release.release_end"
-            }
-        ],
-        "apply": ["val", "time", "ts"],
-        "filter_modes": [
-            {"filters": [], "weight": 40},
-            {"filters": ["val", "time"], "weight": 40},
-            {"filters": ["val", "ts"], "weight": 20}
-        ]
-    },
     # ---------------------------------------------------------
     # 5. TOP N (Ordering and Limits)
     # ---------------------------------------------------------
     {
         "id": "top_n",
-        "enabled": False,
+        "enabled": True,
         "weight": 80,
         "nl": ["top {limit} {group_col} by {m_nl} {filters}"],
         "sql": "SELECT {group_col_sql}, {m_sql} FROM epp_sla",
@@ -221,28 +185,8 @@ SQL_TEMPLATES = [
     # 7. TRIPLE JOIN (SLA + CLIENT + RELEASE)
     # ---------------------------------------------------------
     {
-        "id": "metrics_client_release_old",
-        "enabled": False,
-        "weight": 100,
-        "nl": ["{m_nl} across clients and releases for {filters}"],
-        "sql": "SELECT {m_sql} FROM {from_clause}",
-        "tables": ["epp_sla", "epp_client", "epp_release"],
-        "joins": [
-            {"left": "epp_sla.client_name", "right": "epp_client.client_name"},
-            {
-                "right_table": "epp_release",
-                "on": "epp_sla.date BETWEEN epp_release.release_start AND epp_release.release_end"
-            }
-        ],
-        "apply": ["val", "time", "ts"],
-        "filter_modes": [
-            {"filters": ["time"], "weight": 50},
-            {"filters": ["val", "ts"], "weight": 50}
-        ]
-    },
-    {
         "id": "metrics_client_release",
-        "enabled": False,
+        "enabled": True,
         "weight": 100,
         "nl": ["{m_nl} across clients and releases {group_clause} for {filters}"],
         "sql": "SELECT {m_sql} FROM {from_clause}",
@@ -271,7 +215,7 @@ SQL_TEMPLATES = [
     # ---------------------------------------------------------
     {
         "id": "pattern_search",
-        "enabled": False,
+        "enabled": True,
         "weight": 60,
         "nl": ["records where {group_col} starts with {pattern_val} {filters}"],
         "sql": "SELECT * FROM epp_sla", # Pattern search usually implies raw records
