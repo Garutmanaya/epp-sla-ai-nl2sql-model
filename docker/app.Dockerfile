@@ -43,7 +43,7 @@ COPY --from=builder /usr/local /usr/local
 COPY src ./src
 COPY config ./config
 # Migrate to S3
-COPY hub/artifacts/  ./hub/artifacts
+#COPY hub/artifacts/  ./hub/artifacts
 # Need pyproject.toml to identify the root
 COPY pyproject.toml uv.lock ./
 
