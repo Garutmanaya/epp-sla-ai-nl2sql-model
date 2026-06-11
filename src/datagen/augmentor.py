@@ -32,7 +32,13 @@ class EPPAugmentor:
             "across releases": ["during rollout periods", "per release", "by maintenance window"],
             "average response time": ["avg latency", "mean speed", "response delay"],
             "count of distinct commands": ["number of unique actions", "unique command count", "different commands"],
-            "hourly trend": ["hour-by-hour breakdown", "hourly stats", "history per hour"]
+            "hourly trend": ["hour-by-hour breakdown", "hourly stats", "history per hour"], 
+
+            # ✅ ADD THESE (small, high-impact)
+            "total volume": ["total traffic", "overall volume"],
+            "record count": ["total records", "row count"],
+            "minimum response time": ["lowest latency"],
+            "maximum response time": ["peak latency"]
         }
 
         # 3. Conversational Wrappers for "Verbose" mode
@@ -74,7 +80,8 @@ class EPPAugmentor:
         
         if style == "short":
             # Strip common robotic filler
-            text = text.replace("get ", "").replace("fetch ", "").replace("total number of ", "")
+            #text = text.replace("get ", "").replace("fetch ", "").replace("total number of ", "")
+            text = re.sub(r"\b(get|fetch|show|give me|please show me|i want|i need to see|can you fetch)\b", "", text, flags=re.IGNORECASE)
             return text.strip()
 
         if style == "verbose":
@@ -84,7 +91,7 @@ class EPPAugmentor:
 
         return text # Natural returns text as-is
 
-    def augment(self, text, style="natural"):
+    def augment_v1(self, text, style="natural"):
         """
         The main transformation engine. Swaps synonyms and applies styles.
         """
@@ -110,6 +117,64 @@ class EPPAugmentor:
         # Cleanup whitespace and capitalization
         new_q = re.sub(r'\s+', ' ', new_q).strip()
         return new_q.capitalize()
+
+    def augment(self, text, style="natural"):
+        """
+        Transformation engine with value protection.
+        """
+
+        # --- 0. Protect schema values (e.g., ADD-DOMAIN, MOD-DOMAIN) ---
+        protected_tokens = [
+            t for t in re.findall(r"\b([A-Z]+(?:[_-][A-Z]+)*)\b", text)
+            if len(t) > 2
+        ]
+        placeholders = {}
+
+        for i, token in enumerate(protected_tokens):
+            ph = f"__VAL{i}__"
+            placeholders[ph] = token
+            text = text.replace(token, ph)
+
+        new_q = text
+
+        # --- 1. Synonym Replacement ---
+        for anchor, alts in self.variations.items():
+            if anchor.lower() in new_q.lower():
+                if random.random() < 0.8:
+                    #pattern = re.compile(re.escape(anchor), re.IGNORECASE)
+                    pattern = re.compile(rf"\b{re.escape(anchor)}\b", re.IGNORECASE)
+                    new_q = pattern.sub(random.choice(alts), new_q)
+
+        # --- 2. Location Variations (safe replace with word boundaries) ---
+        locations = ["USA", "EU", "ASIA", "AUSTRALIA"]
+        for loc in locations:
+            pattern = re.compile(rf"\b{loc}\b")
+            if pattern.search(new_q):
+                loc_variants = [loc, f"the {loc} region", f"customers in {loc}"]
+                new_q = pattern.sub(random.choice(loc_variants), new_q)
+
+        # Numeric phrasing variation
+        new_q = re.sub(r"\bgreater than (\d+)\b", r"above \1", new_q)
+        # --- 3. Apply style ---
+        new_q = self._apply_linguistic_style(new_q, style)
+
+        # --- 4. Restore protected values ---
+        #for ph, token in placeholders.items():
+        #    new_q = new_q.replace(ph, token)
+        for ph, token in placeholders.items():
+            pattern = re.compile(re.escape(ph), re.IGNORECASE)
+            new_q = pattern.sub(token, new_q)
+
+        # --- 5. Cleanup ---
+        new_q = re.sub(r'\s+', ' ', new_q).strip()
+
+        # Avoid full lowercase side-effects
+        if new_q:
+            new_q = new_q[0].upper() + new_q[1:]
+
+        return new_q
+
+
 
     def log_transformation(self, original, augmented, style):
         """Debug helper to track how questions are being mutated."""
