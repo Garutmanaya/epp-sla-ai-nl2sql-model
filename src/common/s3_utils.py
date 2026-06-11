@@ -132,6 +132,13 @@ class S3Manager:
         self.download_assets("data")
         self.download_assets("model")
         self.download_assets("db")
+
+    def sync_model_from_s3(self):
+        """Helper to download  models for the active version."""
+        logger.info("Syncing all assets (data, model, db) from S3...")
+        self.download_assets("data")
+        self.download_assets("model")
+        
         
 def main():
     """
