@@ -42,8 +42,7 @@ COPY --from=builder /usr/local /usr/local
 # Copy app code
 COPY src ./src
 COPY config ./config
-RUN mkdir -p /app/hub/data/
-RUN mkdir -p /app/hub/artifacts/
+RUN mkdir -p /app/hub && chmod -R 777 /app/hub
 # Migrate to S3
 #COPY hub/artifacts/  ./hub/artifacts
 # Need pyproject.toml to identify the root

@@ -26,7 +26,7 @@ output "deployment_summary" {
       account_id   = data.aws_caller_identity.current.account_id
       caller_arn   = data.aws_caller_identity.current.arn
       principal    = element(split("/", data.aws_caller_identity.current.arn), 1)
-      region       = data.aws_region.current.id
+      region       = data.aws_region.current.region
       partition    = data.aws_partition.current.partition
     }
 
@@ -36,7 +36,7 @@ output "deployment_summary" {
     sagemaker = {
       endpoint_name = module.sagemaker.endpoint_name
 
-      console_url = "https://${data.aws_region.current.id}.console.aws.amazon.com/sagemaker/home?region=${data.aws_region.current.id}#/endpoints/${module.sagemaker.endpoint_name}"
+      console_url = "https://${data.aws_region.current.region}.console.aws.amazon.com/sagemaker/home?region=${data.aws_region.current.region}#/endpoints/${module.sagemaker.endpoint_name}"
     }
 
     ##########################################
@@ -45,7 +45,7 @@ output "deployment_summary" {
     lambda = {
       function_name = module.lambda.lambda_function_name
 
-      console_url = "https://${data.aws_region.current.id}.console.aws.amazon.com/lambda/home?region=${data.aws_region.current.id}#/functions/${module.lambda.lambda_function_name}"
+      console_url = "https://${data.aws_region.current.region}.console.aws.amazon.com/lambda/home?region=${data.aws_region.current.region}#/functions/${module.lambda.lambda_function_name}"
     }
 
     ##########################################
@@ -55,7 +55,7 @@ output "deployment_summary" {
       api_id   = module.apigateway.api_id
       api_url  = module.apigateway.api_url
 
-      console_url = "https://${data.aws_region.current.id}.console.aws.amazon.com/apigateway/home?region=${data.aws_region.current.id}#/apis/${module.apigateway.api_id}"
+      console_url = "https://${data.aws_region.current.region}.console.aws.amazon.com/apigateway/home?region=${data.aws_region.current.region}#/apis/${module.apigateway.api_id}"
     }
 
     ##########################################

@@ -54,6 +54,28 @@ resource "aws_iam_role" "lambda" {
   })
 }
 
+resource "aws_iam_role_policy" "sagemaker_s3" {
+  name = "s3-model-access"
+  role = aws_iam_role.sagemaker.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ],
+        Resource = [
+          "arn:aws:s3:::epp-sla-reporter-text2sql",
+          "arn:aws:s3:::epp-sla-reporter-text2sql/*"
+        ]
+      }
+    ]
+  })
+}
+
 # Basic logging permissions
 resource "aws_iam_role_policy_attachment" "lambda_logs" {
   role       = aws_iam_role.lambda.name
